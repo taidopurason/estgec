@@ -4,8 +4,8 @@ This is the parallel sentences subcorpus of University of Tartu L2 learner's cor
 This version includes the 8935 extracts (*mistakes*) where at least one correction was provided.  
   
 
-Each *<mistake>* has one or more continuous sentences where the student made grammatical mistakses, as well as possible corrections and comments added by annotators.  
-* 1 <original> tag - The language learner's original sentence with mistakes.  
-* 1 or more <correction> tags - A grammatically correct alternatve to the sentence, as suggested by annotators. Since there might be multiple ways to correct the original sentence, some have 2 or even 3 alternative corrections.  
-* 1 <comment> tag - For annotators' comments about the sentence.  
+Each *\<mistake\>* has one or more continuous sentences where the student made grammatical mistakses, as well as possible corrections and comments added by annotators.  
+* 1 \<original\> tag - The language learner's original sentence with mistakes.  
+* 1 or more \<correction\> tags - A grammatically correct alternatve to the sentence, as suggested by annotators. Since there might be multiple ways to correct the original sentence, some have 2 or even 3 alternative corrections.  
+* 1 \<comment\> tag - For annotators' comments about the sentence.  
  
