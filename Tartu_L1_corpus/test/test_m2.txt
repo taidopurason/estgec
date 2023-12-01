@@ -2494,7 +2494,7 @@ S Võib olla küll väga raske olla see , kes sa oled , kuid neid raskusi tuleb 
 A 9 10|||U:LEX|||-NONE-|||REQUIRED|||-NONE-|||0
 
 S Igaühel on ka omad vaateväljad ja tõekspidamised .
-A 4 5|||vaateväli|||vaateväljad|||REQUIRED|||-NONE-|||0
+A 4 5|||R:NOM:FORM|||vaateväljad|||REQUIRED|||-NONE-|||0
 
 S Selle nimel , et teistele meeldida , ollakse võimelised uskumatuteks tegudeks .
 A -1 -1|||noop|||-NONE-|||-NONE-|||-NONE-|||0
