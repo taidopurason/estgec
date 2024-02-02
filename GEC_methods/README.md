@@ -1,1 +1,0 @@
-# Estonian GEC systems
