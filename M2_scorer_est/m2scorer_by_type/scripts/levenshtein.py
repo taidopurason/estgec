@@ -1,5 +1,6 @@
 #!/usr/bin/python
-
+import math
+import random
 # This file is part of the NUS M2 scorer.
 # The NUS M2 scorer is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -99,11 +100,54 @@ def f1_suffstats(candidate, source, gold_edits, max_unchanged_words=2, ignore_wh
         print("-------------------------------------------")
     return (stat_correct, stat_proposed, stat_gold)
 
-def batch_multi_pre_rec_f1(candidates, sources, gold_edits, max_unchanged_words=2, beta=0.5, ignore_whitespace_casing= False, verbose=False, very_verbose=False):
+
+def _evaluate(data, beta):
+    stat_proposed_examples, stat_correct_examples, stat_gold_examples = split_data(data)
+    stat_correct = sum(stat_correct_examples)
+    stat_proposed = sum(stat_proposed_examples)
+    stat_gold = sum(stat_gold_examples)
+
+    try:
+        p = stat_correct / stat_proposed
+    except ZeroDivisionError:
+        p = 1.0
+
+    try:
+        r = stat_correct / stat_gold
+    except ZeroDivisionError:
+        r = 1.0
+    try:
+        f1 = (1.0 + beta * beta) * p * r / (beta * beta * p + r)
+    except ZeroDivisionError:
+        f1 = 0.0
+    return {"f1": f1, "p": p, "r": r}
+
+
+def combine_data(stat_proposed_examples, stat_correct_examples, stat_gold_examples):
+    return list(zip(stat_proposed_examples, stat_correct_examples, stat_gold_examples))
+
+
+def split_data(x):
+    return tuple(zip(*x))
+
+
+def mean(arr):
+    return sum(arr) / len(arr)
+
+
+def sample_stddev(arr):
+    mu = mean(arr)
+    return math.sqrt(sum([(x - mu) ** 2 for x in arr]) / (len(arr) - 1))
+
+
+def batch_multi_pre_rec_f1(candidates, sources, gold_edits, max_unchanged_words=2, beta=0.5, ignore_whitespace_casing= False, verbose=False, very_verbose=False, bootstrap_n=10000, seed=42):
     assert len(candidates) == len(sources) == len(gold_edits)
     stat_correct = 0.0
+    stat_correct_examples = []
     stat_proposed = 0.0
+    stat_proposed_examples = []
     stat_gold = 0.0
+    stat_gold_examples = []
     i = 0
     
     # Distinguishing error types
@@ -227,8 +271,11 @@ def batch_multi_pre_rec_f1(candidates, sources, gold_edits, max_unchanged_words=
             print(">> Chosen Annotator for line", i, ":", chosen_ann)
             print("")
         stat_correct += argmax_correct
+        stat_correct_examples.append(argmax_correct)
         stat_proposed += argmax_proposed
+        stat_proposed_examples.append(argmax_proposed)
         stat_gold += argmax_gold
+        stat_gold_examples.append(argmax_gold)
               
         # Count error type statistics
         #etypes_best_edit: [(etype,fullmatch,scope,partial overlap)]
@@ -357,6 +404,27 @@ def batch_multi_pre_rec_f1(candidates, sources, gold_edits, max_unchanged_words=
         f1 = (1.0+beta*beta) * p * r / (beta*beta*p+r)
     except ZeroDivisionError:
         f1 = 0.0
+
+    stderrs = None
+    if bootstrap_n > 0:
+        data = combine_data(
+            stat_proposed_examples=stat_proposed_examples,
+            stat_correct_examples=stat_correct_examples,
+            stat_gold_examples=stat_gold_examples
+        )
+        rnd = random.Random(seed)
+
+        res = []
+        for _ in range(bootstrap_n):
+            res.append(_evaluate(rnd.choices(data, k=len(data)), beta=beta))
+
+        columns = ["f1", "p", "r"]
+        means = {column: mean([x[column] for x in res]) for column in columns}
+        stderrs = {column: sample_stddev([x[column] for x in res]) for column in columns}
+        print("means", means)
+        print("stderrs", stderrs)
+
+
     if verbose:
         print("CORRECT EDITS  :", int(stat_correct))
         print("PROPOSED EDITS :", int(stat_proposed))
@@ -364,6 +432,10 @@ def batch_multi_pre_rec_f1(candidates, sources, gold_edits, max_unchanged_words=
         print("P =", p)
         print("R =", r)
         print("F_%.1f =" % beta, f1)
+        if stderrs is not None:
+            print("P_stderr =", stderrs["p"])
+            print("R_stderr =", stderrs["r"])
+            print("F_%.1f_stderr =" % beta, stderrs["f1"])
         
     statistics_by_error_type = True
     # Print out recall statistics by error type
@@ -398,7 +470,7 @@ def batch_multi_pre_rec_f1(candidates, sources, gold_edits, max_unchanged_words=
              print()
         print()
 
-    return (p, r, f1)
+    return (p, r, f1, stderrs)
     
 
 def batch_pre_rec_f1(candidates, sources, gold_edits, max_unchanged_words=2, beta=0.5, ignore_whitespace_casing= False, verbose=False, very_verbose=False):
