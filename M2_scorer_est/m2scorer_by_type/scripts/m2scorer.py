@@ -257,9 +257,13 @@ fin.close()
 
 p, r, f1, stderrs = levenshtein.batch_multi_pre_rec_f1(system_sentences, source_sentences, gold_edits, max_unchanged_words, beta, ignore_whitespace_casing, verbose, very_verbose, bootstrap_n=10000, seed=42)
 if stderrs is not None:
-    print("Precision_stderr   : %.4f" % stderrs["p"])
-    print("Recall_stderr      : %.4f" % stderrs["r"])
-    print("F_%.1f_stderr       : %.4f" % (beta, stderrs["f1"]))
+    z = 1.959963984540054
+    print("Precision_ci   : %.8f" % (stderrs["p"] * z))
+    print("Recall_ci      : %.8f" % (stderrs["r"] * z))
+    print("F_%.1f_ci       : %.8f" % (beta, stderrs["f1"] * z))
+    print("Precision_stderr   : %.8f" % stderrs["p"])
+    print("Recall_stderr      : %.8f" % stderrs["r"])
+    print("F_%.1f_stderr       : %.8f" % (beta, stderrs["f1"]))
 
 print("Precision   : %.4f" % p)
 print("Recall      : %.4f" % r)
